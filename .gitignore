@@ -1,0 +1,12 @@
+# .gitignore
+__pycache__
+.idea
+.venv
+*.pyc
+logs/
+rag_qa/models/**
+models/
+
+# 教材和题库数据（课程内部资料，不公开）
+rag_qa/data/management_data/**/*.pdf
+mysql_qa/data/*.csv

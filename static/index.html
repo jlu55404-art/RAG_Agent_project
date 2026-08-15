@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduRAG管理学(河南)在线问答系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 140, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            color: #ff8c00;
+        }
+
+        .header p {
+            font-size: 1.05em;
+            opacity: 0.9;
+            color: #ccc;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .session-id {
+            font-size: 0.9em;
+            color: #666;
+            background: #f5f5f5;
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #ff8c00;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e07b00;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 500px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: #ff8c00;
+            color: white;
+            margin-left: 20%;
+            text-align: right;
+        }
+
+        .ai-message {
+            background: #f1f3f4;
+            color: #333;
+            margin-right: 20%;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #f1f3f4;
+            border-radius: 10px;
+            color: #666;
+        }
+
+        .typing-indicator span {
+            animation: blink 1.4s infinite;
+            opacity: 0.6;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 1em;
+            min-height: 60px;
+            max-height: 120px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #ff8c00;
+            box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .subject-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .subject-tag {
+            padding: 6px 12px;
+            background: #e9ecef;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .subject-tag:hover {
+            background: #dee2e6;
+        }
+
+        .subject-tag.active {
+            background: #ff8c00;
+            color: white;
+        }
+
+        .session-list {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .session-item {
+            padding: 8px 12px;
+            background: #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .session-item:hover {
+            background: #dee2e6;
+        }
+
+        .session-item.active {
+            background: #ff8c00;
+            color: white;
+        }
+
+        .session-item-title {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .session-item-actions {
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .session-item:hover .session-item-actions {
+            opacity: 1;
+        }
+
+        .session-action-btn {
+            background: transparent;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            padding: 2px 5px;
+            font-size: 0.8em;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        .status-offline {
+            background: #dc3545;
+        }
+
+        .status-connecting {
+            background: #ffc107;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .user-message, .ai-message {
+                margin-left: 10%;
+                margin-right: 10%;
+            }
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .quick-q-btn {
+            padding: 4px 10px;
+            background: #fff3e0;
+            border: 1px solid #ff8c00;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.8em;
+            color: #e07b00;
+            transition: all 0.2s ease;
+        }
+
+        .quick-q-btn:hover {
+            background: #ff8c00;
+            color: white;
+        }
+
+        .sources-container {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .sources-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #666;
+        }
+
+        .source-item {
+            padding: 2px 0;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>EduRAG管理学(河南)在线问答系统</h1>
+            <p>基于RAG的智能问答系统 - 专为河南专升本管理学考生打造的智能学习助手</p>
+        </div>
+
+        <div class="main-content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="session-info">
+                        <span class="session-id">会话ID: <span id="current-session">-</span></span>
+                        <div class="connection-status">
+                            <span class="status-indicator status-offline" id="connection-indicator"></span>
+                            <span id="connection-text">离线</span>
+                        </div>
+                    </div>
+                    <div class="controls">
+                        <button class="btn-success" onclick="createNewSession()">新对话</button>
+                        <button class="btn-danger" onclick="clearCurrentHistory()">清空全部会话</button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message ai-message">
+                        你好！我是EduRAG管理学智能答疑助手，专为河南专升本考生服务！<br>
+                        我可以帮你解答管理学相关的问题，包括基础概念、理论人物、真题解析等。<br>
+                        <div class="quick-questions">
+                            <span class="quick-q-btn" onclick="quickAsk('泰勒科学管理理论的主要内容是什么？')">泰勒科学管理理论</span>
+                            <span class="quick-q-btn" onclick="quickAsk('马斯洛需求层次理论有哪几个层次？')">马斯洛需求层次</span>
+                            <span class="quick-q-btn" onclick="quickAsk('管理的四大职能是什么？')">管理四大职能</span>
+                            <span class="quick-q-btn" onclick="quickAsk('法约尔的14条管理原则有哪些？')">法约尔14条原则</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-group">
+                        <textarea id="user-input" placeholder="请输入你的管理学问题...（支持概念解释、理论对比、真题解析等）" onKeyPress="handleKeyPress(event)"></textarea>
+                        <small style="color: #666;">按 Enter 发送，Shift+Enter 换行</small>
+                    </div>
+                    <button class="btn-primary" onclick="sendMessage()" style="height: fit-content; padding: 15px 20px;">发送</button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h3>资料类别</h3>
+                    <div class="subject-filters" id="subject-filters">
+                        <!-- 学科标签将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>会话列表</h3>
+                    <div class="session-list" id="session-list">
+                        <!-- 会话列表将通过JavaScript动态加载 -->
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>系统状态</h3>
+                    <div style="font-size: 0.9em; color: #666;">
+                        <div>服务器状态: <span id="server-status">检查中...</span></div>
+                        <div>当前会话: <span id="session-count">0</span> 个</div>
+                        <div style="margin-top: 8px; font-size: 0.85em; color: #999;">
+                            知识库: 22份管理学教材<br>
+                            覆盖: 基础教材/真题/模拟卷/记忆宝典
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentSessionId = null;
+        let ws = null;
+        let selectedSubject = null;
+        let sessions = {};
+
+        // DOM元素
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const currentSessionEl = document.getElementById('current-session');
+        const subjectFilters = document.getElementById('subject-filters');
+        const sessionList = document.getElementById('session-list');
+        const connectionIndicator = document.getElementById('connection-indicator');
+        const connectionText = document.getElementById('connection-text');
+        const serverStatus = document.getElementById('server-status');
+        const sessionCount = document.getElementById('session-count');
+
+        // 获取JWT token
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        // 检查登录状态，未登录则跳转
+        function checkAuth() {
+            if (!getToken()) {
+                window.location.href = '/';
+                return false;
+            }
+            return true;
+        }
+
+        // 处理401未授权，清除token跳转登录
+        function handle401() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/';
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuth()) return;
+            initApp();
+        });
+
+        async function initApp() {
+            await createNewSession();
+            await loadSubjects();
+            checkServerHealth();
+            setInterval(checkServerHealth, 30000);
+        }
+
+        // 快捷提问
+        function quickAsk(question) {
+            userInput.value = question;
+            sendMessage();
+        }
+
+        // 创建新会话
+        async function createNewSession() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            hideTypingIndicator();
+            isSending = false;
+            userInput.disabled = false;
+
+            try {
+                const token = getToken();
+                const response = await fetch('/api/create_session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                const data = await response.json();
+                const newSessionId = data.session_id;
+
+                sessions[newSessionId] = {
+                    id: newSessionId,
+                    messages: []
+                };
+
+                switchToSession(newSessionId);
+                updateSessionCount();
+            } catch (error) {
+                console.error('创建会话失败:', error);
+                showMessage('创建会话失败，请检查服务器连接', 'ai-message');
+            }
+        }
+
+        // 切换会话
+        function switchToSession(sessionId) {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            hideTypingIndicator();
+            isSending = false;
+            userInput.disabled = false;
+
+            currentSessionId = sessionId;
+            currentSessionEl.textContent = sessionId;
+
+            chatMessages.innerHTML = '';
+
+            if (sessions[sessionId] && sessions[sessionId].messages.length > 0) {
+                sessions[sessionId].messages.forEach(msg => {
+                    showMessage(msg.text, msg.sender);
+                });
+            } else {
+                showMessage('你好！我是EduRAG管理学智能答疑助手，很高兴为你服务！<br>这是一个新的对话，请输入你的管理学问题。', 'ai-message');
+            }
+
+            updateSessionList();
+        }
+
+        // 渲染会话列表
+        function updateSessionList() {
+            sessionList.innerHTML = '';
+
+            Object.values(sessions).forEach(session => {
+                const sessionItem = document.createElement('div');
+                sessionItem.className = `session-item ${session.id === currentSessionId ? 'active' : ''}`;
+                sessionItem.onclick = () => switchToSession(session.id);
+
+                const sessionTitle = document.createElement('div');
+                sessionTitle.className = 'session-item-title';
+                sessionTitle.textContent = session.id;
+
+                const sessionActions = document.createElement('div');
+                sessionActions.className = 'session-item-actions';
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'session-action-btn';
+                deleteBtn.textContent = 'X';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteSingleSession(session.id);
+                };
+
+                sessionActions.appendChild(deleteBtn);
+                sessionItem.appendChild(sessionTitle);
+                sessionItem.appendChild(sessionActions);
+                sessionList.appendChild(sessionItem);
+            });
+        }
+
+        // 删除单条会话
+        async function deleteSingleSession(sessionId) {
+            if (Object.keys(sessions).length <= 1) {
+                alert('至少保留一个会话，无法删除！');
+                return;
+            }
+            if (!confirm(`确定移除会话 ${sessionId}？`)) return;
+
+            delete sessions[sessionId];
+
+            if (sessionId === currentSessionId) {
+                const restIds = Object.keys(sessions);
+                if (restIds.length > 0) {
+                    switchToSession(restIds[0]);
+                } else {
+                    await createNewSession();
+                }
+            } else {
+                updateSessionList();
+            }
+            updateSessionCount();
+
+            try {
+                const token = getToken();
+                const res = await fetch(`/api/history/${sessionId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const resData = await res.json();
+                console.log(`会话${sessionId}后端清空成功：`, resData.message);
+            } catch (err) {
+                console.error(`会话${sessionId}后端清空失败:`, err);
+            }
+        }
+
+        function updateSessionCount() {
+            sessionCount.textContent = Object.keys(sessions).length;
+        }
+
+        // 加载学科标签
+        async function loadSubjects() {
+            try {
+                const response = await fetch('/api/sources');
+                const data = await response.json();
+
+                subjectFilters.innerHTML = '';
+                data.sources.forEach(subject => {
+                    const tag = document.createElement('div');
+                    tag.className = 'subject-tag';
+                    tag.textContent = subject;
+                    tag.onclick = () => selectSubject(subject, tag);
+                    subjectFilters.appendChild(tag);
+                });
+            } catch (error) {
+                console.error('加载学科类别失败:', error);
+                // 默认显示管理学标签
+                const tag = document.createElement('div');
+                tag.className = 'subject-tag active';
+                tag.textContent = 'management';
+                subjectFilters.appendChild(tag);
+            }
+        }
+
+        function selectSubject(subject, element) {
+            if (subject === selectedSubject) {
+                // 点击已选中的标签 → 取消选中
+                selectedSubject = null;
+                document.querySelectorAll('.subject-tag').forEach(tag => tag.classList.remove('active'));
+            } else {
+                // 选中新标签
+                selectedSubject = subject;
+                document.querySelectorAll('.subject-tag').forEach(tag => tag.classList.remove('active'));
+                element.classList.add('active');
+            }
+        }
+
+        // HTML转义函数（防XSS）
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        let isSending = false;  // 发送锁定
+
+        // 发送消息
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            if (isSending) return;  // 防止重复发送
+            isSending = true;
+            userInput.disabled = true;
+            const cleanMessage = message.replace(/\s+/g, ' ');
+
+            showMessage(cleanMessage, 'user-message');
+            if (!sessions[currentSessionId]) sessions[currentSessionId] = { id: currentSessionId, messages: [] };
+            sessions[currentSessionId].messages.push({ text: cleanMessage, sender: 'user-message' });
+            userInput.value = '';
+
+            if (isGreeting(cleanMessage)) {
+                const resp = getGreetingResponse(cleanMessage);
+                setTimeout(() => {
+                    showMessage(resp, 'ai-message');
+                    sessions[currentSessionId].messages.push({ text: resp, sender: 'ai-message' });
+                    isSending = false;
+                    userInput.disabled = false;
+                }, 500);
+                return;
+            }
+
+            showTypingIndicator();
+
+            // 如果WebSocket已连接，直接通过WS发送（不走HTTP）
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    query: cleanMessage,
+                    source_filter: selectedSubject,
+                    session_id: currentSessionId
+                }));
+                // WS发送后解锁由onmessage的end事件处理
+                isSending = false;
+                userInput.disabled = false;
+                return;
+            }
+
+            // WS未连接，先尝试HTTP（FAQ快速匹配）
+            try {
+                const token = getToken();
+                const response = await fetch('/api/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        query: cleanMessage,
+                        source_filter: selectedSubject,
+                        session_id: currentSessionId
+                    })
+                });
+                if (response.status === 401 || response.status === 403) {
+                    hideTypingIndicator();
+                    isSending = false;
+                    userInput.disabled = false;
+                    handle401();
+                    return;
+                }
+                const data = await response.json();
+
+                if (data.is_streaming) {
+                    // FAQ未命中，需要RAG → 建立WS连接
+                    connectWebSocket(cleanMessage);
+                } else {
+                    hideTypingIndicator();
+                    isSending = false;
+                    userInput.disabled = false;
+                    const answer = data.answer || '抱歉，未获取到回答';
+                    showMessage(answer, 'ai-message');
+                    sessions[currentSessionId].messages.push({ text: answer, sender: 'ai-message' });
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                isSending = false;
+                userInput.disabled = false;
+                console.error('发送消息失败:', error);
+                showMessage('发送消息失败，请检查网络连接', 'ai-message');
+                sessions[currentSessionId].messages.push({ text: '发送消息失败，请检查网络连接', sender: 'ai-message' });
+            }
+        }
+
+        // WebSocket流式输出
+        function connectWebSocket(question) {
+            if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+            const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+            const token = getToken();
+            const wsUrl = `${wsProto}//${window.location.host}/api/stream?token=${token}`;
+            ws = new WebSocket(wsUrl);
+            updateConnectionStatus('connecting', '连接中...');
+
+            ws.onopen = () => {
+                updateConnectionStatus('online', '在线');
+                ws.send(JSON.stringify({
+                    query: question,
+                    source_filter: selectedSubject,
+                    session_id: currentSessionId
+                }));
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                switch (data.type) {
+                    case 'token':
+                        appendToLastMessage(data.token);
+                        break;
+                    case 'sources':
+                        // 渲染引用来源
+                        appendSources(data.sources);
+                        break;
+                    case 'end':
+                        hideTypingIndicator();
+                        updateConnectionStatus('online', '在线');
+                        isSending = false;
+                        userInput.disabled = false;
+                        const lastMsg = getLastMessageElement();
+                        if (lastMsg && lastMsg.classList.contains('ai-message')) {
+                            sessions[currentSessionId].messages.push({
+                                text: lastMsg.innerHTML,
+                                sender: 'ai-message'
+                            });
+                        }
+                        break;
+                    case 'error':
+                        hideTypingIndicator();
+                        isSending = false;
+                        userInput.disabled = false;
+                        showMessage(`错误: ${data.error}`, 'ai-message');
+                        sessions[currentSessionId].messages.push({ text: `错误: ${data.error}`, sender: 'ai-message' });
+                        updateConnectionStatus('offline', '离线');
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                isSending = false;
+                userInput.disabled = false;
+                updateConnectionStatus('offline', '离线');
+            };
+            ws.onerror = (err) => {
+                console.error('ws错误', err);
+                hideTypingIndicator();
+                showMessage('WebSocket连接错误', 'ai-message');
+                sessions[currentSessionId].messages.push({ text: 'WebSocket连接错误', sender: 'ai-message' });
+                updateConnectionStatus('offline', '离线');
+            };
+        }
+
+        function getLastMessageElement() {
+            const msgs = chatMessages.children;
+            return msgs.length ? msgs[msgs.length - 1] : null;
+        }
+
+        // 渲染引用来源
+        function appendSources(sources) {
+            if (!sources || sources.length === 0) return;
+            const lastMsg = getLastMessageElement();
+            if (!lastMsg) return;
+            const sourcesDiv = document.createElement('div');
+            sourcesDiv.className = 'sources-container';
+            const titleEl = document.createElement('div');
+            titleEl.className = 'sources-title';
+            titleEl.textContent = '引用来源：';
+            sourcesDiv.appendChild(titleEl);
+            sources.forEach((src, i) => {
+                const item = document.createElement('div');
+                item.className = 'source-item';
+                const fileName = src.file_name || '未知文件';
+                const page = src.page || 0;
+                item.textContent = `[${i + 1}] ${fileName}${page ? ' 第' + page + '页' : ''}`;
+                sourcesDiv.appendChild(item);
+            });
+            lastMsg.appendChild(sourcesDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function updateConnectionStatus(status, text) {
+            connectionIndicator.className = 'status-indicator';
+            connectionText.textContent = text;
+            if (status === 'online') connectionIndicator.classList.add('status-online');
+            if (status === 'offline') connectionIndicator.classList.add('status-offline');
+            if (status === 'connecting') connectionIndicator.classList.add('status-connecting');
+        }
+
+        function showMessage(text, className) {
+            const div = document.createElement('div');
+            div.className = `message ${className}`;
+            const escaped = escapeHtml(text || '暂无内容').replace(/\n/g, '<br>');
+            div.innerHTML = escaped;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const div = document.createElement('div');
+            div.className = 'message ai-message';
+            div.id = 'typing-indicator';
+            div.innerHTML = '<div class="typing-indicator"><span>.</span><span>.</span><span>.</span></div>';
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const el = document.getElementById('typing-indicator');
+            if (el) el.remove();
+        }
+
+        function appendToLastMessage(text) {
+            const safe = escapeHtml(text).replace(/\n/g, '<br>');
+            const items = chatMessages.children;
+            if (items.length > 0) {
+                const last = items[items.length - 1];
+                if (last.classList.contains('ai-message') && last.id !== 'typing-indicator') {
+                    last.innerHTML += safe;
+                } else {
+                    const d = document.createElement('div');
+                    d.className = 'message ai-message';
+                    d.innerHTML = safe;
+                    chatMessages.appendChild(d);
+                }
+            } else {
+                const d = document.createElement('div');
+                d.className = 'message ai-message';
+                d.innerHTML = safe;
+                chatMessages.appendChild(d);
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function isGreeting(text) {
+            const regs = [
+                /^(你好|您好|hi|hello)/i,
+                /^(你是谁|您是谁|你叫什么|你的名字)/i,
+                /^(在吗|在不在|有人吗)/i,
+                /^(干嘛呢|你在干嘛)/i
+            ];
+            return regs.some(r => r.test(text.trim()));
+        }
+
+        function getGreetingResponse(text) {
+            const list = [
+                { reg: /^(你好|您好|hi|hello)/i, txt: "你好！我是EduRAG管理学智能答疑助手，专为河南专升本考生服务！有什么管理学问题可以帮你解答？" },
+                { reg: /^(你是谁|您是谁|你叫什么)/i, txt: "我是EduRAG管理学智能答疑助手，专注于河南专升本管理学考试的答疑解惑！" },
+                { reg: /^(在吗|在不在)/i, txt: "我在！随时为你解答管理学相关的问题，请问有什么可以帮你的？" },
+                { reg: /^(干嘛呢|你在干嘛)/i, txt: "我正在待命，随时为你解答管理学学习中的问题！有什么我可以帮你的？" }
+            ];
+            for (let item of list) {
+                if (item.reg.test(text.trim())) return item.txt;
+            }
+            return "你好！有什么管理学问题我可以帮你解答吗？";
+        }
+
+        // 一键清空全部会话
+        async function clearCurrentHistory() {
+            const allSessionIds = Object.keys(sessions);
+            if (allSessionIds.length === 0) {
+                alert('暂无会话可清空');
+                return;
+            }
+            if (!confirm(`确定清空全部${allSessionIds.length}个会话的所有问答记录？`)) return;
+
+            sessions = {};
+            currentSessionId = null;
+            sessionList.innerHTML = '';
+            chatMessages.innerHTML = '';
+            sessionCount.textContent = "0";
+
+            const token = getToken();
+            const deletePromises = allSessionIds.map(sid =>
+                fetch(`/api/history/${sid}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                }).catch(err => console.warn(`会话${sid} 后端清除失败`, err))
+            );
+            await Promise.all(deletePromises);
+
+            await createNewSession();
+            alert('所有会话已清空，已自动生成新会话');
+        }
+
+        async function checkServerHealth() {
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                serverStatus.textContent = data.status === 'healthy' ? '正常' : '异常';
+                serverStatus.style.color = data.status === 'healthy' ? '#28a745' : '#dc3545';
+            } catch {
+                serverStatus.textContent = '无法连接';
+                serverStatus.style.color = '#dc3545';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
